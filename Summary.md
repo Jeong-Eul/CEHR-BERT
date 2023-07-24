@@ -25,7 +25,16 @@ EHR 데이터는 병원마다 용어도 다르고, 양식도 다른데 OHDSI는 
 
 저자는 변환한 OMOP 데이터 셋에서 conditions, procedures, medication의 3가지 clinical domain 만을 활용했다고 밝혔다.
 
-### Data processing and patient representation  
+### Data processing and patient representation(sequence)  
+
+논문에서 제시한 환자의 시퀀스를 표현하는 벡터를 이해하기 위해 필요한 notation은 다음 사진과 같다.  
+
+<p align ='center'><img src="https://github.com/Jeong-Eul/CEHR-BERT/blob/main/notation1.jpg?raw=true" width = 70%></p>
+<p align ='center'><img src="https://github.com/Jeong-Eul/CEHR-BERT/blob/main/notation2.jpg?raw=true" width = 70%></p>
+
+
+### Embedding Technique for input of BERT
+
 
 
 ## Experiment  
