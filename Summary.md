@@ -38,10 +38,10 @@ EHR 데이터는 병원마다 용어도 다르고, 양식도 다른데 OHDSI는 
 
 patient history를 representation 하기 위한 4가지 embedding이 있다.  
 <blockquote>
-1) Concept embedding<br>  
-2) Visit embedding<br>  
-3) Time embedding<br>  
-4) Age embedding  
+1) Concept(str) embedding<br>  
+2) Visit(str) embedding<br>  
+3) Time(numeric) embedding<br>  
+4) Age(numeric) embedding  
 </blockquote>
 
 <br>
@@ -58,6 +58,12 @@ $\to$ OMOP 데이터 셋 양식에 따르면 concept table의 "concept_code"라�
 
 등장하는 단어(구)의 빈도를 바탕으로 수치로 바꾸어주는 일종의 변환이 있을 것이라 생각된다.  
 예를 들어 "you say goodbye and i say hello" 라는 문장이 있으면 "you"의 동시 발생 빈도는 [0, 1, 0, 0, 0, 0] 이 되는 것처럼 말이다.  
+
+<p align ="center"><img src="https://github.com/Jeong-Eul/CEHR-BERT/blob/main/Image/co-occurence.jpg?raw=true" width = 60%></p>
+
+<br>
+
+<b>Visit segment embedding</b>: Visit segment embedding은 기존 BERT에서 segment 토큰과 똑같은 역할을 한다. 참고로 비슷한 연구인 BEHRT에서도 사용했다.  
 
 
 
