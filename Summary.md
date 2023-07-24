@@ -6,7 +6,7 @@ Data source: IColumbia University Iriving Medical Center-York Presbyterian Hospi
 Date: Nov, 2021  
 </blockquote>
 <br>
-<center> <img src="https://github.com/Jeong-Eul/CEHR-BERT/blob/main/architecture.jpg?raw=true" width = 70%></center>
+<p align = "center"> <img src="https://github.com/Jeong-Eul/CEHR-BERT/blob/main/architecture.jpg?raw=true" width = 70%></p>
 <br>
 
 ## Introduction  
