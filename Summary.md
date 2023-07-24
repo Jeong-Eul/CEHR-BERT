@@ -38,13 +38,15 @@ EHR 데이터는 병원마다 용어도 다르고, 양식도 다른데 OHDSI는 
 
 patient history를 representation 하기 위한 4가지 embedding이 있다.  
 <blockquote>
-1) Concept(str) embedding<br>  
-2) Visit(str) embedding<br>  
-3) Time(numeric) embedding<br>  
-4) Age(numeric) embedding  
+1) Concept embedding<br>  
+2) Visit embedding<br>  
+3) Time embedding<br>  
+4) Age embedding  
 </blockquote>
 
 <br>
+
+---  
 
 <b>Concept embedding</b>: Concept embeddings were used to capture the numeric representations of the concept codes based on underlying cooccurrence statistics  
 $\to$ OMOP 데이터 셋 양식에 따르면 concept table의 "concept_code"라는 열이 있다. 아래 사진은 MIMIC을 OMOP로 변환한 데이터셋에서의 예시이다. 그림에서 볼 수 있듯 "concept_code"라고 하는 것은 짧은 자연어(구; Phrase)로 되어 있다. 
@@ -65,6 +67,30 @@ $\to$ OMOP 데이터 셋 양식에 따르면 concept table의 "concept_code"라�
 
 <b>Visit segment embedding</b>: Visit segment embedding은 기존 BERT에서 segment 토큰과 똑같은 역할을 한다. 참고로 비슷한 연구인 BEHRT에서도 사용했다.  
 
+<p align ="center"><img src ="https://github.com/Jeong-Eul/CEHR-BERT/blob/main/Image/BEHRT.jpg?raw=true"></p>
 
+<br>
+
+<b>Time embedding</b>: 개인적으로 다른 EHR 데이터의 Bert 적용한 다양한 연구와 비교하여 ATT와 더불어 본 논문의 차별점이 될 수 있는 본 논문에서의 필살기라 생각된다. <i>간단하게 요약하자면 Time2Vec 이라는 방법론이 있는데 이는 시계열을 잘 representation 할 수 있는 방법이다.</i> 논문의 이름은 "Time2Vec: Learning a Vector Representation of Time" 이다. 시간에 대한 Representation을 수행하는데 특히 주기 패턴과 비주기 패턴에 강건하며 time resolution을 변경하더라도 중요한 정보는 담아내고, 여러 모델에 쉽게 적용이 가능하다는 특징이 있다.
+
+<p align ="center"><img src ="https://github.com/Jeong-Eul/CEHR-BERT/blob/main/Image/t2v.png?raw=true"></p>
+
+<br>
+이 정보는 나에게 있어서 본 논문의 아키텍처보다 더 재밌는 사실이었다. 내가 하고 싶은 연구에 꼭 필요한 방법인 것 같다는 생각이 들었고, time을 representation 하는 다른 방법도 비교해보고 싶기 떄문에 이 논문은 꼭 시간내서 읽어야겠다. <b>(Lab meeting 등을 이용하여도 좋을 것 같다.)</b>  
+
+<b>Age embedding</b>: 자세하게 나와있지는 않지만 환자가 visit 할 때의 나이를 순차적으로 이어 붙인 것 같다.  
+
+---
+
+Time embedding은  visit에 대한 절대적인 시간 정보를 포함하고 있으며 Age embedding은 visit에 대한 상대적인 시간 정보를 포함하고 있기 때문에 계절적 패턴과 나이와 관련된 질병(2형 당뇨 등)의 condition을 잘 capture 할 수 있다.
+
+이를 바탕으로 BERT의 입력이 될 Input vector를 만든다.  
+[상세과정]  
+
+1. Concept embedding + Visit segment embedding  =>  CV 라고 표현한다면
+2. Concat([Age emnedding, Time embedding, CV]) => Concatenated Embeddings  
+3. Fully Connected layer(Concatenated Embeddings) => temporal concept embeddings  
+
+즉 3번의 Temporal concept embedding이 Bert의 입력이 된다.(FC layer의 출력차원은 Concept embedding 차원과 같은 차원으로 만들어 주는 것 같다.)
 
 ## Experiment  
