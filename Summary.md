@@ -93,4 +93,6 @@ Time embedding은  visit에 대한 절대적인 시간 정보를 포함하고 �
 
 즉 3번의 Temporal concept embedding이 Bert의 입력이 된다.(FC layer의 출력차원은 Concept embedding 차원과 같은 차원으로 만들어 주는 것 같다.)
 
+<p align ="center"><img src ="https://github.com/Jeong-Eul/CEHR-BERT/blob/main/Image/temporal_concept_emb_describe.jpg?raw=true" width = 70%></p>
+
 ## Experiment  
