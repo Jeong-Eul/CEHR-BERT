@@ -5,8 +5,9 @@ Author: Chao Pang, Xinzhuo Jiang, Krishna S. Kalluri, Matthew Spotnitz<br>
 Data source: IColumbia University Iriving Medical Center-York Presbyterian Hospital<br>
 Date: Nov, 2021  
 </blockquote>
-
-
+<br>
+<center> <img src="https://github.com/Jeong-Eul/CEHR-BERT/blob/main/architecture.jpg?raw=true" width = 70%></center>
+<br>
 
 ## Introduction  
 ## Related work
