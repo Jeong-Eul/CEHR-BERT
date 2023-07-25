@@ -51,7 +51,7 @@ patient history를 representation 하기 위한 4가지 embedding이 있다.
 <b>Concept embedding</b>: Concept embeddings were used to capture the numeric representations of the concept codes based on underlying cooccurrence statistics  
 $\to$ OMOP 데이터 셋 양식에 따르면 concept table의 "concept_code"라는 열이 있다. 아래 사진은 MIMIC을 OMOP로 변환한 데이터셋에서의 예시이다. 그림에서 볼 수 있듯 "concept_code"라고 하는 것은 짧은 자연어(구; Phrase)로 되어 있다. 
 <br>
-<p align ="center"><img src="https://github.com/Jeong-Eul/CEHR-BERT/blob/main/Image/concept_code_MIMIC_OMOP.jpg?raw=true>" width = 40% height = 600></p>
+<p align ="center"><img src="https://github.com/Jeong-Eul/CEHR-BERT/blob/main/Image/concept_code_MIMIC_OMOP.jpg?raw=true" width = 40% height = 600></p>
 <br>
 
 아마도 환자의 visit 안에 여러 개의 concept_code가 시간과 매칭되어 있을 것이다. 이렇게 자연어로 표현된 "concept_code"를 co-occurrence statistics에 기반한 real vector로 바꾸어 임베딩을 한다.  
@@ -94,5 +94,41 @@ Time embedding은  visit에 대한 절대적인 시간 정보를 포함하고 �
 즉 3번의 Temporal concept embedding이 Bert의 입력이 된다.(FC layer의 출력차원은 Concept embedding 차원과 같은 차원으로 만들어 주는 것 같다.)
 
 <p align ="center"><img src ="https://github.com/Jeong-Eul/CEHR-BERT/blob/main/Image/temporal_concept_emb_describe.jpg?raw=true" width = 70%></p>
+
+### Training method  
+
+<blockquote>
+1) MLM<br>  
+2) VTP<br>  
+</blockquote>
+
+<br>
+
+<b>MLM(Masked Language Model)</b>: Masked Language Model을 도입함으로써 BERT 는 문맥에서 빠진 단어를 맞추기 위해 양방향으로 문맥을 살피며 문장 전체를 이해하게 된다. 이러한 MLM을 CEHR-BERT에 적용하였다고한다. 입력되는 시퀀스(Temporal concept embedding)의 일부를 랜덤하게 mask 하고, mask 된 부분을 맞추도록 훈련된다.  
+
+<p align = 'center'><img src = "https://github.com/Jeong-Eul/CEHR-BERT/blob/main/Image/MLM.jpg?raw=true" width = 50%></p>
+
+<br>
+
+<b>VTP</b>: VTP는 Visit Type Prediction의 약어이다. 요약하면, 위에서 임베딩한 medical concept이 들어있는 embedding vector를 환자의 visit type으로 변환하는 작업이다. 때문에 VTP는 일종의 language translation task로 볼 수 있다. 저자는 다양한 visit type(방문 유형)이 다양한 medical concept와 서로 연관이 있다라는 가정을 세웠다. 예시를 들어줬으면 좋겠지만 설명이 없어 아쉬웠다. 나름대로 해석을 해보자면 다음과 같은 연관이 있을 것 같다.  
+
+example 1. emergency visit 인 경우 응급 상황에 처한 환자들에게 즉각적인 응급 치료와 처치를 제공하는 것이 목적이므로 medical concept에는 기록 시간 빈도가 높다거나 응급 질환에 자주 사용되는 약물들의 사용이 있을 것 같다.  
+
+example 2. oup patient visit 인 경우 일반적인 건강 검진, 진단, 치료, 상담이 목적이므로 예약된 시간에 의사와 상담이 이루어진다. 따라서 medical concept에는 기록 시간 빈도가 낮다거나 일반적인 약물들의 사용이 있을 것 같다.  
+
+이렇듯 저자의 말대로 visit type과 medical concept 사이에 연관이 있기 때문에 Visit Type을 잘 맞추도록 하는 sub task를 통해 BERT 모델에게 추가적인 문맥을 파악할 수 있도록 할 수 있다.  
+
+<p align = 'center'><img src = "https://github.com/Jeong-Eul/CEHR-BERT/blob/main/Image/NTM.jpg?raw=true" width =45%></p>
+
+
+<b>VTP를 구현하는 법</b>: 환자의 Visit type(Inpatient visit, Outpatient visit, emergency visit, Masked visit) sequence, Age Embedding, Time embedding 을 같은 과정(Temporal transformation)을 거쳐 일정 크기의 벡터로 만들고, 이를 디코더의 입력으로 넣는다. 그 다음 Encoder(BERT)에서 나온 d_model 차원의 벡터를 받아(key와 value를 받지 않을까 싶다) Multihead Attention으로 퓨전해주어 표현학습하고, 이를 기반으로 다시 Visit type이 무엇이었는지 맞추는 과정을 수행한다. BERT의 laguage translation과 정확히 동일한 과정으로 진행되는 것 같다.  
+<br>
+이 모든 내용을 기반으로 모델의 아키텍처를 이해하기 쉽게 다시 그리면 다음과 같다.  
+
+<br>
+
+<p align ="center"><img src = "https://github.com/Jeong-Eul/CEHR-BERT/blob/main/Image/model_architecture_reproduction.jpg?raw=true"></p>
+
+<p align ="center"><i>그림에서 Visit segment + Concept Embedding에 randomly masked 가 추가되어야 함(7/25 update)</i></p>
 
 ## Experiment  
