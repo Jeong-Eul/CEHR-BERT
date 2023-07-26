@@ -148,7 +148,7 @@ example 2. oup patient visit 인 경우 일반적인 건강 검진, 진단, 치�
 <br>
 <p align='center'><img src="https://github.com/Jeong-Eul/CEHR-BERT/blob/main/Image/data_example.jpg?raw=true>" width = 80%></p>  
 
-MIMIC의 경우에 omop_data_csv/condition_occurrence.csv, procedure_occurrence.csv, drug_exposure.csv에 존재하는 Concept code를 가지고 {Concept code : SCRIPT} 의 딕셔너리 형태로 저장된 achilles_json/condition_treemap.json(여기에 AGE 포함), achilles_json/drug_treemap.json, achilles_json/procedure_treemap.json 을 매핑시켜 데이터를 구성할 수 있을 것 같다.  
+MIMIC의 경우에 omop_data_csv/condition_occurrence.csv, procedure_occurrence.csv, drug_exposure.csv에 존재하는 Concept code(concept code는 자연어, 식별자의 형태로 저장되어 있음. 자연어의 경우엔 그대로 사용하고, 식별자인 경우엔 json 파일을 이용해 매핑을 해야하는 형태로 이해하였음)를 가지고 {Concept code : SCRIPT} 의 딕셔너리 형태로 저장된 achilles_json/condition_treemap.json(여기에 AGE 포함), achilles_json/drug_treemap.json, achilles_json/procedure_treemap.json 을 매핑시켜 데이터를 구성할 수 있을 것 같다.
 <br>
 <p align='center'>Physionet에서 제공하는 MIMIC-IV의 OMOP 데이터 파일</p>
 <p align ="center"><img src = "https://github.com/Jeong-Eul/CEHR-BERT/blob/main/Image/physionet_data_files_img.jpg?raw=true"></p>
@@ -158,6 +158,105 @@ MIMIC의 경우에 omop_data_csv/condition_occurrence.csv, procedure_occurrence.
 <br>
 <p align='center'>concept code를 매핑하는데 사용하는 json 파일:Procedure</p>
 <p align ="center"><img src = "https://github.com/Jeong-Eul/CEHR-BERT/blob/main/Image/procedure_treemap.jpg?raw=true"></p>
+<br>
+
+3) Hyper parameter:
+<blockquote>
+1.BERT ENCODER: 5 layer<br>
+2.Multi Head: 8개<br>
+3.Droprate: 0.1<br>
+4.embedding, hidden dimension: 128<br>
+5.Input demension: 300<br>
+6.EPOCH: 5<br>
+7.Batch size: 32<br>
+8.Learning Rate: $2e^{-4}$
+</blockquote>
+<br>
+window size를 300으로한 이유는 300이라는 size가 환자의 history의 90%를 cover할 수 있기 때문이라고 밝혔다. 더불어, 시퀀스가 만약 300을 넘어갈 경우 random slice했다고 한다. 개인적으로 이해하기는 처음 element부터 300까지 혹은 마지막 element부터 뒷 방향으로 300까지 slice를 하는데 이 기준을 랜덤하게 정한 것이 아닐까한다.  
+또한 시퀀스가 300 보다 적을 경우 PAD 토큰을 이용하여 padding을 해주었다고 한다.  
+
+### Experiments  
+
+저자는 제안한 모델의 data representation 능력을 확인하기 위해 Disease classification을 진행했다고 한다. 이를 위해 classifier로 Bi-LSTM을 사용했다.  
+<p align='center'><img src="https://raw.githubusercontent.com/Jeong-Eul/CEHR-BERT/main/Image/bilstm.webp" width = 70%></p>  
+<br>
+
+#### Appendix A. Prediction Tasks  
+
+Target cohort(대상 집단): 초기 그룹  
+Outcome cohort(결과 집단): 초기 그룹의 하위 집단  
+
+observation window: patient의 전체 history 중에서 학습에 포함할 데이터
+prediction window:  patient의 전체 history 중에서 예측에 포함할 데이터
+
+prediction task는 Target cohort 중에서 outcome cohort 를 잘 분류해 내는 것이다.  
+
+1. <b>T2DM HF(Type 2 diabetes mellitus patients who developed Heart Failure):</b> 대상 집단은 제 2형 당뇨가 있는 환자들로 구성이 되었고, 제 2형 당뇨를 진단받기 전에 제 1형 당뇨, 당뇨증(혈뇨증), 임신성 당뇨병, 2차성 당뇨병 및 신생아 당뇨병이 있는 환자들은 제외했다. 결과 집단은 Heart Falilure를 경험한 사람으로 다음과 같은 기준이 있는 환자를 포함했다. <br>
+
+    1-1 적어도 하나의 높은 BNP 결과가 있으며(least one lab test with high BNP results)
+    1-2 기계적 순한 지원(machanical circulatory support)  
+    1-3 인공 심장 관련 수술(artificial heart procedure)  
+    1-4 이뇨제, 혈관 활성제 또는 투석 절차를 받은 환자들(diuretic agent,
+vasoactive agent or dialysis procedure.)
+
+이 기준들은 Table 6,7에 제시된 OMOP concept id를 가지고 판단했다고 한다.  
+
+<p align ='center'><img src ="https://github.com/Jeong-Eul/CEHR-BERT/blob/main/Image/table6.jpg?raw=true"></p>
+<br>
+<p align ='center'><img src ="https://github.com/Jeong-Eul/CEHR-BERT/blob/main/Image/table7.jpg?raw=true"></p>
+<br>
+
+2. <b>HF readmit(Heart Failure patiens who were readmitted within 30 days):</b>  대상집단은 hert failure 때문에 병원에 방문한 환자들이다. 결과집단은 대상집단 환자들 중 한번 방문한 이후 30일 이내 다시 방문한 환자들이다. 따라서 예측하고자 하는 것은 어떤 환자가 30일 이내에 다시 재방문할 것인지이다. 방문을 의미하는 concept id는 9201, 262이다. 또한 이 경우에 prediction window는 30일이다.  
+<br>
+
+3. <b>discharge home death(patients who were discharged and died within one year)</b>: 대상집단은 inpatient - discharged to home 즉, 입원 했다가 퇴원 했던 환자들이며, 결과집단은 퇴원 후 1년 이내 사망한 환자이다. 입원 환자 concept id 9201, 262 / 퇴원 환자는 discharge_to_concept_id 로 구분했으며 prediction window는 360일이다. 
+<br>
+
+4. <b>Hospitalization</b>: 특정환자의 첫번째 방문시점 이후 입원 여부에 대한 예측 task로 이해했다. 충분한 데이터포인트를 갖기 위해 observation window 내에 2회 ~ 30회까지 visit이 발생한 환자만을 포함시켰다고한다.
+
+
 
 <br>
 
+observation window는 따로 명시되지 않는 한 1년으로 세팅했다. (Hospiralization의 obsevation window는 첫 방문 이후 3년, prediction window는 2년 즉, 처음 방문 이후 3년이 지난 시점으로부터 2년간의 hospitalization에 대한 예측 task)  
+
+<br>
+
+#### 4 prediction tasks result  
+
+<br>
+<p align = "center"><img src = "https://github.com/Jeong-Eul/CEHR-BERT/blob/main/Image/experiment_result.jpg?raw=true"></p>
+<br>
+
+*R-BERT: No pretrained CEHR-BERT  
+
+위 실험 결과를 통해 알 수 있는 것:
+1. sequence를 모델링 할 수 있는 BERT, LSTM이 base model(LR, XGB)보다 성능이 좋았다.  
+2. 모든 Task에서 pre trained model이 그렇지 않은 것 보다 성능이 좋았다.  
+3. BERT 기반 모델(R-BERT, BEHRT, MedBERT)이 LSTM 보다 좋았다. -> Attention 때문일까?  
+4. 대부분의 Task 에서 제안 모델이 1등, Med-BERT가 2등을 달성했다.  
+4. 하지만 Hospitalization 의 경우 Med-BERT 보다 LSTM의 성능이 더 좋았다. -> 이유를 분석하여 제시하지 않았다.    
+3. 제안 모델인 CHERT-BERT가 모든 예측 task에서 성능이 좋았다.  
+
+#### Ablation study: ATT, Temporal concept embedding, Visit Prediction Task가 정말 효과가 있었는가?  
+
+<p align ="center"><img src="https://github.com/Jeong-Eul/CEHR-BERT/blob/main/Image/experiment_result_abl.jpg?raw=true"></p>
+
+1. <b>ATT 토큰 유무에 따른 성능차이 비교</b> - M-BERT(no token), B-BERT(only sep token), CEHR-BERT
+ 
+    어떠한 seperate 토큰을 사용하지 않은 M-BERT 보다 SEP 토큰을 사용한 B-BERT가 거의 모든 Task에서 성능이 좋았으며 SEP 토큰 대신 visit에 대한 시간 정보를 사용한 CEHR-BERT 가 성능이 제일 좋았다. 따라서 visit 별 시간 정보를 활용하는 것이 효과가 있었다.  
+
+2. <b>Temporal concept embedding의 효과</b> - ART-BERT(no temporal concept embedding), CEHR-BERT  
+
+    ALT-BERT는 temporal concept embedding을 사용하지 않고, Time embedding, age embedding, concept embedding을 더했다. 성능은 CEHR-BERT가 더 높았으며, temporal concept embedding이 효과가 있었다. 이는 temporal concept embedding이 FC layer를 통해 weight와 bias를 학습할 수 있어서 세 가지 임베딩을 잘 Fusion 하도록 학습이 되었기 때문이 아닐까 싶다.  
+
+
+3. <b>Visit Prediction Task의 효과</b> - NS-BERT(no VTP), CEHR-BERT  
+    결과는 Hospitalization 예측 task를 제외하고 CEHR-BERT가 성능이 좋았다. 저자는 이를 실험을 위해 데이터를 Train 75%, Validation 10%, Test 15%로 4-fold로 분리했고, 각 fold를 evaluation 했는데, 이때 수행한 cross validation의 무작위 변동 때문이라고 설명했다.(잘 이해가 안됨/seed 고정을 했다면 각 fold에 들어가는 train, val은 고정일 텐데..?)  
+
+    <p align ='center'><img src ="https://github.com/Jeong-Eul/CEHR-BERT/blob/main/Image/4-fold_issue.jpg?raw=true"></p>
+
+
+    아무튼 Visit Prediection Task는 애초에 각 visit의 concept이 visit type과 연관이 있을 것이라는 가정에 기반한 Sub task이므로, BERT의 representation을 학습하는데 좋은 전략일 것이라고 직관적으로 이해할 수 있었으며, 실험결과 또한 이를 증명했다.  
+
+    
