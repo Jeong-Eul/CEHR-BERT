@@ -132,3 +132,32 @@ example 2. oup patient visit 인 경우 일반적인 건강 검진, 진단, 치�
 <p align ="center"><i>그림에서 Visit segment + Concept Embedding에 randomly masked 가 추가되어야 함(7/25 update)</i></p>
 
 ## Experiment  
+
+### Experiment Setup  
+
+1) Patient selection(2.4M 명의 환자와 그에 따른 184.7M 개의 관측치가 생성됨):  
+<blockquote>적어도 1회 이상 방문한 환자<br>  
+관측치가 5개 이상인 환자</blockquote>  
+
+<br>
+
+2) Clinical Domain:  
+<blockquote>1. Condition<br>
+    2. Procedure<br>
+    3. Medication</blockquote>
+<br>
+<p align='center'><img src="https://github.com/Jeong-Eul/CEHR-BERT/blob/main/Image/data_example.jpg?raw=true>" width = 80%></p>  
+
+MIMIC의 경우에 omop_data_csv/condition_occurrence.csv, procedure_occurrence.csv, drug_exposure.csv에 존재하는 Concept code를 가지고 {Concept code : SCRIPT} 의 딕셔너리 형태로 저장된 achilles_json/condition_treemap.json(여기에 AGE 포함), achilles_json/drug_treemap.json, achilles_json/procedure_treemap.json 을 매핑시켜 데이터를 구성할 수 있을 것 같다.  
+<br>
+<p align='center'>Physionet에서 제공하는 MIMIC-IV의 OMOP 데이터 파일</p>
+<p align ="center"><img src = "https://github.com/Jeong-Eul/CEHR-BERT/blob/main/Image/physionet_data_files_img.jpg?raw=true"></p>
+<br>
+<p align='center'>OMOP.csv 예시</p>
+<p align ="center"><img src = "https://github.com/Jeong-Eul/CEHR-BERT/blob/main/Image/OMOP_CSV_example.jpg?raw=true"></p>
+<br>
+<p align='center'>concept code를 매핑하는데 사용하는 json 파일:Procedure</p>
+<p align ="center"><img src = "https://github.com/Jeong-Eul/CEHR-BERT/blob/main/Image/procedure_treemap.jpg?raw=true"></p>
+
+<br>
+
