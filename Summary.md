@@ -286,6 +286,43 @@ observation window는 따로 명시되지 않는 한 1년으로 세팅했다. (H
 ## Review  
 
  - <b>본 논문을 한마디로 정의하면</b><br>
+    EHR 데이터의 다양한 clinical domain 과 temporal 정보를 통합한 BERT 모델 제안  
  - <b>본 논문이 가장 크게 기여한 부분</b><br>
- - <b>본 논문에서 아쉬운 것</b><br>
+    기존에는 활용하지 못한 각 방문 사이의 Time interval을 충분히 활용하여 모델에 반영한 것  
+ - <b>본 논문에서 아쉬운 것</b><br>  
+    굳이 뽑자면 한 기관에서 수집된 데이터를 바탕으로 학습하고, 평가했다는 것 -> external evaluation이 있었으면 좋았을 것 같았다.  
+    모델 아키텍쳐가 논문에서 설명한 것과 다르게 표현되어 있어 이해하기 까다로웠음  
+     논문에서는 Temporal embedding이 BERT의 입력으로 들어간다고 했는데, 아키텍쳐 그림만 보면 그렇게 보기 어려움  
+     4-prediction task의 성능 및 결과에 대한 해석(임상적 등)적 분석을 전혀 제시하고 있지 않음  
+     
+      1. 논문에서 제시한 task가 높은 수준의 해석력이 필요 없는가?  
+    2. eary prediction task에 사용한다면 어떻게 해석할 수 있을까가 의문점으로 남아 있음  
+    <br>
+
  - <b>본 논문과 관련된 본인의 아이디어</b><br>
+    <br>
+    본 논문에서는 visit의 간격을 ATT로 모델링 하고, 한 visit 내의 수집된Time point(procedure, medication, condition 등)를 embedding 하였다. 
+
+    circuratory failure 같은 early prediction task에서 medication, chartevent, 등 다양한 Time resolution을 갖고 데이터가 수집되는데, 기존에는 이를 merge 해놓고 전처리를 하는 방식이 흔했다.  
+
+    이는 데이터의 품질을 낮게 하고, 불필요하게 특정 테이블의 resolution이 증가하거나 감소하여 노이즈를 유발할 수 있다고 판단했다.  
+
+    따라서 테이블 별로 각각 임베딩 하여 한 공간에 embedding 하고 이를 활용하여 early prediction에 적용하면 수집된 시간에 강건한 모델이 만들어질 수 있을 것이라 생각했다.  
+    이에 본 논문에서 사용한 T2V과 Temporal concept embedding을 이용한다면 수집된 시간에 대한 정보도 모델링 할 수 있을 것 같다고 생각하였다.  
+
+    <아이디어 초안: <b>early prediction을 위한 medical domain을 통합한 robust Time resolution 임베딩 모델 개발</b>>
+
+    1. Time resampling 수행하지 않기    
+    2. 각 Table 별 Time information + observation value(different medical domain) + age 통합 임베딩  
+    3. 3가지 embedding vector를 Multi Head Attention으로 한 공간에 Fusion: 한 환자의 medication, lab test value, chart event 등은 서로 관련이 있을 것이라는 가정(MAP < 65mmhg, vasoactive 약물 사용했다면 정확한 진단을 위해 lactate를 측정 -> 이 과정 자체가 측정 시간정보와 함께 attention으로 모델링 될 수 있기를 바라면서)  
+    4. Learning Task는 2를 복원(각 테이블 별 임베딩 벡터. 즉 3개의 Output Head)  
+    5. Fine-tune 전략: 임베딩 된 벡터를 가지고 early prediction task 수행  
+    6. 해석: 고민 중 입니다.  
+<br>
+<p align ="center"><img src ="https://github.com/Jeong-Eul/CEHR-BERT/blob/main/Image/Idea.jpg?raw=true" width = 70%></p>
+
+
+
+
+
+    
