@@ -63,7 +63,7 @@ patient history를 representation 하기 위한 4가지 embedding이 있다.
 ---  
 
 <b>Concept embedding</b>: <br>Concept embeddings were used to capture the numeric representations of the concept codes based on underlying cooccurrence statistics<br>  
-$\to$ OMOP 데이터 셋 양식에 따르면 concept table의 "concept_code"라는 열이 있다. 아래 사진은 MIMIC을 OMOP로 변환한 데이터셋에서의 예시이다. 그림에서 볼 수 있듯 "concept_code"라고 하는 것은 짧은 자연어(구; Phrase)로 되어 있다. 
+$\to$ OMOP 데이터 셋 양식에 따르면 concept table의 "concept_code"라는 열이 있다. 아래 사진은 MIMIC을 OMOP로 변환한 데이터셋에서의 예시이다. 그림에서 볼 수 있듯 "concept_code"라고 하는 것은 짧은 자연어(구; Phrase) 또는 식별자(int)로 되어 있다. 
 <br>
 <p align ="center"><img src="https://github.com/Jeong-Eul/CEHR-BERT/blob/main/Image/concept_code_MIMIC_OMOP.jpg?raw=true" width = 40% height = 600></p>
 <br>
@@ -91,8 +91,11 @@ $\to$ OMOP 데이터 셋 양식에 따르면 concept table의 "concept_code"라�
 
 <br>
 이 정보는 나에게 있어서 본 논문의 아키텍처보다 더 재밌는 사실이었다. 내가 하고 싶은 연구에 꼭 필요한 방법인 것 같다는 생각이 들었고, time을 representation 하는 다른 방법도 비교해보고 싶기 떄문에 이 논문은 꼭 시간내서 읽어야겠다. <b>(Lab meeting 등을 이용하여도 좋을 것 같다.)</b>  
+<br>
 
-<b>Age embedding</b>: 자세하게 나와있지는 않지만 환자가 visit 할 때의 나이를 순차적으로 이어 붙인 것 같다.  
+<b>Age embedding</b>:><br>
+자세하게 나와있지는 않지만 환자가 visit 할 때의 나이를 순차적으로 이어 붙인 것 같다.  
+<br>
 
 ---
 
@@ -105,26 +108,29 @@ Time embedding은  visit에 대한 절대적인 시간 정보를 포함하고 �
 2. Concat([Age emnedding, Time embedding, CV]) => Concatenated Embeddings  
 3. Fully Connected layer(Concatenated Embeddings) => temporal concept embeddings  
 
-즉 3번의 Temporal concept embedding이 Bert의 입력이 된다.(FC layer의 출력차원은 Concept embedding 차원과 같은 차원으로 만들어 주는 것 같다.)
+즉 3번의 Temporal concept embedding이 Bert의 입력이 된다.(FC layer의 출력차원은 Concept embedding 차원과 같은 차원으로 만들어 주는 것 같다.) embedding vector들이 어떻게 합쳐지는지는 아래 모델 아키텍처에서 더 자세히 볼 수 있다.  
+
 
 <p align ="center"><img src ="https://github.com/Jeong-Eul/CEHR-BERT/blob/main/Image/temporal_concept_emb_describe.jpg?raw=true" width = 70%></p>
 
 ### Training method  
 
 <blockquote>
-1) MLM<br>  
+1) MLM(concept prediction)<br>  
 2) VTP<br>  
 </blockquote>
 
 <br>
 
-<b>MLM(Masked Language Model)</b>: Masked Language Model을 도입함으로써 BERT 는 문맥에서 빠진 단어를 맞추기 위해 양방향으로 문맥을 살피며 문장 전체를 이해하게 된다. 이러한 MLM을 CEHR-BERT에 적용하였다고한다. 입력되는 시퀀스(Temporal concept embedding)의 일부를 랜덤하게 mask 하고, mask 된 부분을 맞추도록 훈련된다.  
+<b>MLM(Masked Language Model) = Concept prediction</b>: <br> 
+Masked Language Model을 도입함으로써 BERT 는 문맥에서 빠진 단어를 맞추기 위해 양방향으로 문맥을 살피며 문장 전체를 이해하게 된다. 이러한 MLM을 CEHR-BERT에 적용하였다고한다. 입력되는 시퀀스(Temporal concept embedding)의 일부를 랜덤하게 mask 하고, mask 된 부분을 맞추도록 훈련된다.  
 
 <p align = 'center'><img src = "https://github.com/Jeong-Eul/CEHR-BERT/blob/main/Image/MLM.jpg?raw=true" width = 50%></p>
 
 <br>
 
-<b>VTP</b>: VTP는 Visit Type Prediction의 약어이다. 요약하면, 위에서 임베딩한 medical concept이 들어있는 embedding vector를 환자의 visit type으로 변환하는 작업이다. 때문에 VTP는 일종의 language translation task로 볼 수 있다. 저자는 다양한 visit type(방문 유형)이 다양한 medical concept와 서로 연관이 있다라는 가정을 세웠다. 예시를 들어줬으면 좋겠지만 설명이 없어 아쉬웠다. 나름대로 해석을 해보자면 다음과 같은 연관이 있을 것 같다.  
+<b>VTP</b>:<br>
+ VTP는 Visit Type Prediction의 약어이다. 요약하면, 위에서 임베딩한 medical concept이 들어있는 embedding vector를 환자의 visit type으로 변환하는 작업이다. 때문에 VTP는 일종의 language translation task로 볼 수 있다. 저자는 다양한 visit type(방문 유형)이 다양한 medical concept와 서로 연관이 있다라는 가정을 세웠다. 예시를 들어줬으면 좋겠지만 설명이 없어 아쉬웠다. 나름대로 해석을 해보자면 다음과 같은 연관이 있을 것 같다.  
 
 example 1. emergency visit 인 경우 응급 상황에 처한 환자들에게 즉각적인 응급 치료와 처치를 제공하는 것이 목적이므로 medical concept에는 기록 시간 빈도가 높다거나 응급 질환에 자주 사용되는 약물들의 사용이 있을 것 같다.  
 
@@ -162,16 +168,14 @@ example 2. oup patient visit 인 경우 일반적인 건강 검진, 진단, 치�
 <br>
 <p align='center'><img src="https://github.com/Jeong-Eul/CEHR-BERT/blob/main/Image/data_example.jpg?raw=true>" width = 80%></p>  
 
-MIMIC의 경우에 omop_data_csv/condition_occurrence.csv, procedure_occurrence.csv, drug_exposure.csv에 존재하는 Concept code(concept code는 자연어, 식별자의 형태로 저장되어 있음. 자연어의 경우엔 그대로 사용하고, 식별자인 경우엔 json 파일을 이용해 매핑을 해야하는 형태로 이해하였음)를 가지고 {Concept code : SCRIPT} 의 딕셔너리 형태로 저장된 achilles_json/condition_treemap.json(여기에 AGE 포함), achilles_json/drug_treemap.json, achilles_json/procedure_treemap.json 을 매핑시켜 데이터를 구성할 수 있을 것 같다.
+MIMIC의 경우에 omop_data_csv/condition_occurrence.csv, procedure_occurrence.csv, drug_exposure.csv에 존재하는 Concept code(concept code는 자연어, 식별자의 형태로 저장되어 있음. 자연어의 경우엔 그대로 사용하고, 식별자인 경우엔 concept name 열을 활용하면 될 것 같음)를 가지고 데이터를 구성할 수 있을 것 같다.
 <br>
 <p align='center'>Physionet에서 제공하는 MIMIC-IV의 OMOP 데이터 파일</p>
 <p align ="center"><img src = "https://github.com/Jeong-Eul/CEHR-BERT/blob/main/Image/physionet_data_files_img.jpg?raw=true"></p>
 <br>
 <p align='center'>OMOP.csv 예시</p>
 <p align ="center"><img src = "https://github.com/Jeong-Eul/CEHR-BERT/blob/main/Image/OMOP_CSV_example.jpg?raw=true"></p>
-<br>
-<p align='center'>concept code를 매핑하는데 사용하는 json 파일:Procedure</p>
-<p align ="center"><img src = "https://github.com/Jeong-Eul/CEHR-BERT/blob/main/Image/procedure_treemap.jpg?raw=true"></p>
+
 <br>
 
 3) Hyper parameter:
@@ -200,20 +204,20 @@ window size를 300으로한 이유는 300이라는 size가 환자의 history의 
 Target cohort(대상 집단): 초기 그룹  
 Outcome cohort(결과 집단): 초기 그룹의 하위 집단  
 
-observation window: patient의 전체 history 중에서 학습에 포함할 데이터
-prediction window:  patient의 전체 history 중에서 예측에 포함할 데이터
+observation window: patient의 전체 history 중에서 학습할 데이터<br>  
+prediction window:  patient의 전체 history 중에서 예측할 데이터  
 
-prediction task는 Target cohort 중에서 outcome cohort 를 잘 분류해 내는 것이다.  
+prediction task는 Target cohort 중에서 outcome cohort 를 잘 분류해내는 것이다.  
 
 1. <b>T2DM HF(Type 2 diabetes mellitus patients who developed Heart Failure):</b> 대상 집단은 제 2형 당뇨가 있는 환자들로 구성이 되었고, 제 2형 당뇨를 진단받기 전에 제 1형 당뇨, 당뇨증(혈뇨증), 임신성 당뇨병, 2차성 당뇨병 및 신생아 당뇨병이 있는 환자들은 제외했다. 결과 집단은 Heart Falilure를 경험한 사람으로 다음과 같은 기준이 있는 환자를 포함했다. <br>
 
-    1-1 적어도 하나의 높은 BNP 결과가 있으며(least one lab test with high BNP results)
+    1-1 적어도 하나의 높은 BNP 결과가 있으며(least one lab test with high BNP results)  
     1-2 기계적 순한 지원(machanical circulatory support)  
     1-3 인공 심장 관련 수술(artificial heart procedure)  
     1-4 이뇨제, 혈관 활성제 또는 투석 절차를 받은 환자들(diuretic agent,
-vasoactive agent or dialysis procedure.)
+vasoactive agent or dialysis procedure.)  
 
-이 기준들은 Table 6,7에 제시된 OMOP concept id를 가지고 판단했다고 한다.  
+이 기준들은 Table 6,7에 제시된 OMOP concept id를 가지고 판단했다고 한다.    
 
 <p align ='center'><img src ="https://github.com/Jeong-Eul/CEHR-BERT/blob/main/Image/table6.jpg?raw=true"></p>
 <br>
@@ -278,4 +282,10 @@ observation window는 따로 명시되지 않는 한 1년으로 세팅했다. (H
 
     아무튼 Visit Prediection Task는 애초에 각 visit의 concept이 visit type과 연관이 있을 것이라는 가정에 기반한 Sub task이므로, BERT의 representation을 학습하는데 좋은 전략일 것이라고 직관적으로 이해할 수 있었으며, 실험결과 또한 이를 증명했다.  
 
-    
+
+## Review  
+
+ - <b>본 논문을 한마디로 정의하면</b><br>
+ - <b>본 논문이 가장 크게 기여한 부분</b><br>
+ - <b>본 논문에서 아쉬운 것</b><br>
+ - <b>본 논문과 관련된 본인의 아이디어</b><br>
