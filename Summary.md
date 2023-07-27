@@ -13,16 +13,15 @@ Date: Nov, 2021
 
 - 기존 EHR의 BERT 적용 관련 연구들은 시간의 간격을 두고 수집되는 EHR 데이터의 Temporal 특성을 완전히 모델링하지 못했음  
 - Text로 표현된 medical history는 임베딩 효과가 좋지만, temporal interval이 있는 경우에는 그러지 못했음  
-- BERT는 NSP, MLM 으로 학습이 이루어지는데, NSP의 경우 현재 문장을 입력받고 다음 문장을 예측하는 Task임  
-- EHR 데이터 같은 경우에 환자 전체 기록을 연속된 하나의 문서로 볼 수 없음 -> 새로운 학습 방법이 필요함
+- BERT는 입력된 문장 다음 문장을 예측하는 NSP, 입력 문장의 일부 단어를 가린 후 입력 문장을 가려진 단어를 포함하여 복원하는 MLM 으로 학습이 이루어지는데, EHR 데이터 같은 경우에 환자 전체 기록을 연속된 하나의 문서로 볼 수 없음 -> 새로운 학습 방법이 필요함
 <br>
 
 ## Related work
 
  - BEHRT: 입력 값으로 diagnosis code, SEP 토큰 사용 -> 다양한 clinical domain(procedure, medication 등)을 충분히 활용하지 않았음  
  - G-BERT: 적은 데이터셋(20K patient)로 약물 추천시스템을 위해 개발되었음  
- - Med-BERT: MLM에 이어 sub task로서 LOS가 7일 이상일지 아닐지를 예측하여 훈련되었음 하지만  age, visit segment embedding, sep 토큰을 사용하지않았으며 temporal information을 활용하지 않았음  
- - Peng et al."Temproal Self Attention Network for Medical Concept Embedding", 2019, Che et al."Recurrent Neural Network for Multivariate Time Series with Mssing Values", 2018: 시간 정보를 통합하려는 연구들(연속 된 visit 또는 lab value 사이의 temproal 특징 추출) -> 본 논문에서는 이 두가지 연구를 참고하고 artificial time token의 도입으로 시간 정보를 모델링하는 새로운 접근법을 제안  
+ - Med-BERT: MLM과 더불어 sub task로서 LOS가 7일 이상일지 아닐지를 예측하여 훈련되었음. 하지만  age, visit segment embedding, sep 토큰을 사용하지않았으며 temporal information을 활용하지 않았음  
+ - Peng et al."Temproal Self Attention Network for Medical Concept Embedding", 2019, Che et al."Recurrent Neural Network for Multivariate Time Series with Mssing Values", 2018: 시간 정보를 통합하려는 연구들(연속된 visit 또는 lab value 사이의 temproal 특징 추출) -> 본 논문에서는 이 두가지 연구를 참고하고 artificial time token의 도입으로 시간 정보를 모델링하는 새로운 접근법을 제안  
 <br>
 
 ## Method  
@@ -32,6 +31,7 @@ Date: Nov, 2021
 <p align ='center'><img src="https://github.com/Jeong-Eul/CEHR-BERT/blob/main/Image/OHDSI-OurJourney.png?raw=true" width = 50%></p>
 <br>
 EHR 데이터는 병원마다 용어도 다르고, 양식도 다른데 OHDSI는 이러한 다양한 용어와 양식을 가진 EHR 데이터를 통일된 용어와 양식으로 바꾸어 준다. OMOP는 수치형 데이터와 clinical domain(visits, conditions, procedures, medications, lab tests, vital signs 등)가 포함되어 있다. (Physionet에 확인해보니, MIMIC-IV를 OMOP로 변환한 데이터셋이 있다.)
+<br>
 <br>
 
 <p align ='center'><img src="https://github.com/Jeong-Eul/CEHR-BERT/blob/main/Image/ohdsi.jpg?raw=true" width = 50%></p>
@@ -62,7 +62,7 @@ patient history를 representation 하기 위한 4가지 embedding이 있다.
 
 ---  
 
-<b>Concept embedding</b>: Concept embeddings were used to capture the numeric representations of the concept codes based on underlying cooccurrence statistics  
+<b>Concept embedding</b>: <br>Concept embeddings were used to capture the numeric representations of the concept codes based on underlying cooccurrence statistics<br>  
 $\to$ OMOP 데이터 셋 양식에 따르면 concept table의 "concept_code"라는 열이 있다. 아래 사진은 MIMIC을 OMOP로 변환한 데이터셋에서의 예시이다. 그림에서 볼 수 있듯 "concept_code"라고 하는 것은 짧은 자연어(구; Phrase)로 되어 있다. 
 <br>
 <p align ="center"><img src="https://github.com/Jeong-Eul/CEHR-BERT/blob/main/Image/concept_code_MIMIC_OMOP.jpg?raw=true" width = 40% height = 600></p>
@@ -79,13 +79,13 @@ $\to$ OMOP 데이터 셋 양식에 따르면 concept table의 "concept_code"라�
 
 <br>
 
-<b>Visit segment embedding</b>: Visit segment embedding은 기존 BERT에서 segment 토큰과 똑같은 역할을 한다. 참고로 비슷한 연구인 BEHRT에서도 사용했다.  
-
+<b>Visit segment embedding</b>: <br>Visit segment embedding은 기존 BERT에서 segment 토큰과 똑같은 역할을 한다. 참고로 비슷한 연구인 BEHRT에서도 사용했다.  
+<br>
 <p align ="center"><img src ="https://github.com/Jeong-Eul/CEHR-BERT/blob/main/Image/BEHRT.jpg?raw=true"></p>
 
 <br>
 
-<b>Time embedding</b>: 개인적으로 다른 EHR 데이터의 Bert 적용한 다양한 연구와 비교하여 ATT와 더불어 본 논문의 차별점이 될 수 있는 본 논문에서의 필살기라 생각된다. <i>간단하게 요약하자면 Time2Vec 이라는 방법론이 있는데 이는 시계열을 잘 representation 할 수 있는 방법이다.</i> 논문의 이름은 "Time2Vec: Learning a Vector Representation of Time" 이다. 시간에 대한 Representation을 수행하는데 특히 주기 패턴과 비주기 패턴에 강건하며 time resolution을 변경하더라도 중요한 정보는 담아내고, 여러 모델에 쉽게 적용이 가능하다는 특징이 있다.
+<b>Time embedding</b>:<br> 개인적으로 다른 EHR 데이터의 Bert 적용한 다양한 연구와 비교하여 ATT와 더불어 본 논문의 차별점이 될 수 있는 본 논문에서의 필살기라 생각된다. <i>간단하게 요약하자면 Time2Vec 이라는 방법론이 있는데 이는 시계열을 잘 representation 할 수 있는 방법이다.</i> 논문의 이름은 "Time2Vec: Learning a Vector Representation of Time" 이다. 시간에 대한 Representation을 수행하는데 특히 주기 패턴과 비주기 패턴에 강건하며 time resolution을 변경하더라도 중요한 정보는 담아내고, 여러 모델에 쉽게 적용이 가능하다는 특징이 있다.
 
 <p align ="center"><img src ="https://github.com/Jeong-Eul/CEHR-BERT/blob/main/Image/t2v.png?raw=true"></p>
 
