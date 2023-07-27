@@ -10,7 +10,21 @@ Date: Nov, 2021
 <br>
 
 ## Introduction  
+
+- 기존 EHR의 BERT 적용 관련 연구들은 시간의 간격을 두고 수집되는 EHR 데이터의 Temporal 특성을 완전히 모델링하지 못했음  
+- Text로 표현된 medical history는 임베딩 효과가 좋지만, temporal interval이 있는 경우에는 그러지 못했음  
+- BERT는 NSP, MLM 으로 학습이 이루어지는데, NSP의 경우 현재 문장을 입력받고 다음 문장을 예측하는 Task임  
+- EHR 데이터 같은 경우에 환자 전체 기록을 연속된 하나의 문서로 볼 수 없음 -> 새로운 학습 방법이 필요함
+<br>
+
 ## Related work
+
+ - BEHRT: 입력 값으로 diagnosis code, SEP 토큰 사용 -> 다양한 clinical domain(procedure, medication 등)을 충분히 활용하지 않았음  
+ - G-BERT: 적은 데이터셋(20K patient)로 약물 추천시스템을 위해 개발되었음  
+ - Med-BERT: MLM에 이어 sub task로서 LOS가 7일 이상일지 아닐지를 예측하여 훈련되었음 하지만  age, visit segment embedding, sep 토큰을 사용하지않았으며 temporal information을 활용하지 않았음  
+ - Peng et al."Temproal Self Attention Network for Medical Concept Embedding", 2019, Che et al."Recurrent Neural Network for Multivariate Time Series with Mssing Values", 2018: 시간 정보를 통합하려는 연구들(연속 된 visit 또는 lab value 사이의 temproal 특징 추출) -> 본 논문에서는 이 두가지 연구를 참고하고 artificial time token의 도입으로 시간 정보를 모델링하는 새로운 접근법을 제안  
+<br>
+
 ## Method  
 
 ### Data  
@@ -246,6 +260,11 @@ observation window는 따로 명시되지 않는 한 1년으로 세팅했다. (H
  
     어떠한 seperate 토큰을 사용하지 않은 M-BERT 보다 SEP 토큰을 사용한 B-BERT가 거의 모든 Task에서 성능이 좋았으며 SEP 토큰 대신 visit에 대한 시간 정보를 사용한 CEHR-BERT 가 성능이 제일 좋았다. 따라서 visit 별 시간 정보를 활용하는 것이 효과가 있었다.  
 
+    또한 논문의 Discussion에서 ATT가 잠재공간에서 적절한 representation을 학습했음을 보여주는 figure를 제공했다. 아래 그림은 ATT 임베딩 값을 PCA를 사용하여 2차원 벡터로 각각 축소한 후 좌표평면에 plot한 결과이다. 그림을 보면, Time internal의 크기에 따라 $W_{n}$ 토큰, $M_{n}$ 토큰, $LT$ 토큰이 오른쪽에서 위쪽으로 linearly 하게 증가하고 있다. 더불어, week 토큰은 서로 군집을 이루고 있었다. 또한 Visit의 시작과 끝을 나타내는 토큰인 VS, VE는 visit의 interval과는 의미론적으로 거리가 멀기 때문에 ATT 토큰과 상태적으로 떨어져 있으며 군집을 이루고 있었다. 이는 납득할만한 결과이며 토큰의 semantic vector 를 잘 학습하였음을 알 수 있다.
+    <br>
+    <br>
+    <p align ="center"><img src = "https://github.com/Jeong-Eul/CEHR-BERT/blob/main/Image/ATT_visualization.jpg?raw=true" width = 70%></p>
+    <br>
 2. <b>Temporal concept embedding의 효과</b> - ART-BERT(no temporal concept embedding), CEHR-BERT  
 
     ALT-BERT는 temporal concept embedding을 사용하지 않고, Time embedding, age embedding, concept embedding을 더했다. 성능은 CEHR-BERT가 더 높았으며, temporal concept embedding이 효과가 있었다. 이는 temporal concept embedding이 FC layer를 통해 weight와 bias를 학습할 수 있어서 세 가지 임베딩을 잘 Fusion 하도록 학습이 되었기 때문이 아닐까 싶다.  
